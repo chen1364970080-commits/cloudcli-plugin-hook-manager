@@ -266,7 +266,10 @@ function renderSection(c, data, type, label, desc) {
 }
 // ── Actions ────────────────────────────────────────────────────────────
 let api;
-async function loadData(root, ctx, saving = false) {
+async function loadData(root, ctx, saving = false, forceLoading = false) {
+    const loading = forceLoading || root._hmFirstLoad !== false;
+    if (forceLoading)
+        root._hmFirstLoad = false;
     try {
         const data = (await api.rpc('GET', 'hooks'));
         root._hmData = data;
@@ -275,7 +278,7 @@ async function loadData(root, ctx, saving = false) {
     }
     catch (err) {
         root._hmError = err.message;
-        render(root, ctx, root._hmData ?? null, false, err.message, saving);
+        render(root, ctx, root._hmData ?? null, loading, err.message, saving);
     }
 }
 async function saveData(root, ctx, hooks) {
@@ -325,7 +328,7 @@ export function mount(container, pluginApi) {
     const root = document.createElement('div');
     Object.assign(root.style, { height: '100%', boxSizing: 'border-box', overflow: 'hidden' });
     container.appendChild(root);
-    loadData(root, ctx);
+    loadData(root, ctx, false, true);
     // Poll every 5 seconds to catch external changes
     pollInterval = setInterval(() => loadData(root, api.context), 5000);
     const unsubscribe = api.onContextChange(() => {
