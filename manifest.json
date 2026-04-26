@@ -1,0 +1,7 @@
+{
+  "name": "hook-manager",
+  "displayName": "Hook Manager",
+  "slot": "tab",
+  "entry": "dist/index.js",
+  "server": "dist/server.js"
+}
