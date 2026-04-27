@@ -196,7 +196,17 @@ function renderHtml(c, data, loading, error, saving) {
             border-radius:50%;animation:hm-spin 0.7s linear infinite;
           "></span>` : ''}
         </div>
-        ${data ? `<div style="font-size:0.65rem;color:${c.muted}">${totalGroups} hook${totalGroups !== 1 ? 's' : ''} configured</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px">
+          ${data ? `<span style="font-size:0.65rem;color:${c.muted}">${totalGroups} hook${totalGroups !== 1 ? 's' : ''}</span>` : ''}
+          <button id="hm-refresh-btn" style="
+            background:none;border:1px solid ${c.border};cursor:pointer;
+            color:${c.muted};padding:4px 8px;border-radius:4px;
+            font-family:${MONO};font-size:0.65rem;display:flex;align-items:center;gap:4px;
+            transition:all 0.15s;
+          " title="Refresh">
+            ↻
+          </button>
+        </div>
       </div>
       ${content}
     </div>
@@ -321,7 +331,6 @@ function toggleGroup(root, ctx, type, idx, enabled) {
     saveData(root, ctx, hooks);
 }
 // ── Mount / Unmount ────────────────────────────────────────────────────
-let pollInterval = null;
 export function mount(container, pluginApi) {
     api = pluginApi;
     const ctx = api.context;
@@ -329,18 +338,18 @@ export function mount(container, pluginApi) {
     Object.assign(root.style, { height: '100%', boxSizing: 'border-box', overflow: 'hidden' });
     container.appendChild(root);
     loadData(root, ctx, false, true);
-    // Poll every 5 seconds to catch external changes
-    pollInterval = setInterval(() => loadData(root, api.context), 5000);
+    // Wire refresh button
+    root.addEventListener('click', (e) => {
+        const btn = e.target.closest('#hm-refresh-btn');
+        if (btn)
+            loadData(root, api.context, false, true);
+    });
     const unsubscribe = api.onContextChange(() => {
-        loadData(root, api.context);
+        loadData(root, api.context, false, true);
     });
     container._hmUnsubscribe = unsubscribe;
 }
 export function unmount(container) {
-    if (pollInterval !== null) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-    }
     if (typeof container._hmUnsubscribe === 'function') {
         container._hmUnsubscribe();
         delete container._hmUnsubscribe;

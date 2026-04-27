@@ -262,7 +262,17 @@ function renderHtml(c: ThemeColors, data: HooksResponse | null, loading: boolean
             border-radius:50%;animation:hm-spin 0.7s linear infinite;
           "></span>` : ''}
         </div>
-        ${data ? `<div style="font-size:0.65rem;color:${c.muted}">${totalGroups} hook${totalGroups !== 1 ? 's' : ''} configured</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px">
+          ${data ? `<span style="font-size:0.65rem;color:${c.muted}">${totalGroups} hook${totalGroups !== 1 ? 's' : ''}</span>` : ''}
+          <button id="hm-refresh-btn" style="
+            background:none;border:1px solid ${c.border};cursor:pointer;
+            color:${c.muted};padding:4px 8px;border-radius:4px;
+            font-family:${MONO};font-size:0.65rem;display:flex;align-items:center;gap:4px;
+            transition:all 0.15s;
+          " title="Refresh">
+            ↻
+          </button>
+        </div>
       </div>
       ${content}
     </div>
@@ -344,7 +354,9 @@ function renderSection(c: ThemeColors, data: HooksResponse, type: 'PreToolUse' |
 
 let api: PluginAPI;
 
-async function loadData(root: HTMLElement, ctx: PluginContext, saving = false): Promise<void> {
+async function loadData(root: HTMLElement, ctx: PluginContext, saving = false, forceLoading = false): Promise<void> {
+  const loading = forceLoading || (root as any)._hmFirstLoad !== false;
+  if (forceLoading) (root as any)._hmFirstLoad = false;
   try {
     const data = (await api.rpc('GET', 'hooks')) as HooksResponse;
     (root as any)._hmData = data;
@@ -352,7 +364,7 @@ async function loadData(root: HTMLElement, ctx: PluginContext, saving = false): 
     render(root, ctx, data, false, null, saving);
   } catch (err) {
     (root as any)._hmError = (err as Error).message;
-    render(root, ctx, (root as any)._hmData ?? null, false, (err as Error).message, saving);
+    render(root, ctx, (root as any)._hmData ?? null, loading, (err as Error).message, saving);
   }
 }
 
@@ -400,8 +412,6 @@ function toggleGroup(root: HTMLElement, ctx: PluginContext, type: 'PreToolUse' |
 
 // ── Mount / Unmount ────────────────────────────────────────────────────
 
-let pollInterval: ReturnType<typeof setInterval> | null = null;
-
 export function mount(container: HTMLElement, pluginApi: PluginAPI): void {
   api = pluginApi;
   const ctx = api.context;
@@ -410,23 +420,22 @@ export function mount(container: HTMLElement, pluginApi: PluginAPI): void {
   Object.assign(root.style, { height: '100%', boxSizing: 'border-box', overflow: 'hidden' });
   container.appendChild(root);
 
-  loadData(root, ctx);
+  loadData(root, ctx, false, true);
 
-  // Poll every 5 seconds to catch external changes
-  pollInterval = setInterval(() => loadData(root, api.context), 5000);
+  // Wire refresh button
+  root.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('#hm-refresh-btn');
+    if (btn) loadData(root, api.context, false, true);
+  });
 
   const unsubscribe = api.onContextChange(() => {
-    loadData(root, api.context);
+    loadData(root, api.context, false, true);
   });
 
   (container as any)._hmUnsubscribe = unsubscribe;
 }
 
 export function unmount(container: HTMLElement): void {
-  if (pollInterval !== null) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
   if (typeof (container as any)._hmUnsubscribe === 'function') {
     (container as any)._hmUnsubscribe();
     delete (container as any)._hmUnsubscribe;
