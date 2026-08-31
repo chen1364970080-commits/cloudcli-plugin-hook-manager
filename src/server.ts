@@ -59,7 +59,10 @@ function writeSettings(data: SettingsData): void {
 
 function getHooks(): HooksConfig {
   const settings = readSettings();
-  return settings.hooks ?? { PreToolUse: [], PostToolUse: [] };
+  // settings.json may define `hooks` while omitting individual event keys
+  // (e.g. only SessionStart). Spread over the defaults so every key in
+  // HooksConfig is always present, as the type promises.
+  return { PreToolUse: [], PostToolUse: [], ...(settings.hooks ?? {}) };
 }
 
 function setHooks(hooks: HooksConfig): void {

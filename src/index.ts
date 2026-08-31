@@ -198,7 +198,7 @@ function render(
 }
 
 function renderHtml(c: ThemeColors, data: HooksResponse | null, loading: boolean, error: string | null, saving: boolean): string {
-  const totalGroups = (data?.hooks.PreToolUse.length ?? 0) + (data?.hooks.PostToolUse.length ?? 0);
+  const totalGroups = (data?.hooks?.PreToolUse?.length ?? 0) + (data?.hooks?.PostToolUse?.length ?? 0);
 
   let content = `<div id="hm-content" style="flex:1;overflow-y:auto;padding:0 20px 20px;${saving ? 'opacity:0.6;pointer-events:none' : ''}">`;
 

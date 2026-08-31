@@ -1,9 +1,13 @@
 {
   "name": "hook-manager",
   "version": "1.0.0",
-  "description": "CloudCLI UI plugin — manage Claude Code hooks in settings.json",
+  "description": "CloudCLI UI plugin \u2014 manage Claude Code hooks in settings.json",
   "type": "module",
   "scripts": {
     "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "@types/node": "^22.15.0"
   }
 }

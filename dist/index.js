@@ -139,7 +139,7 @@ function render(root, ctx, data, loading, error, saving) {
         newContent.scrollTop = savedScrollTop;
 }
 function renderHtml(c, data, loading, error, saving) {
-    const totalGroups = (data?.hooks.PreToolUse.length ?? 0) + (data?.hooks.PostToolUse.length ?? 0);
+    const totalGroups = (data?.hooks?.PreToolUse?.length ?? 0) + (data?.hooks?.PostToolUse?.length ?? 0);
     let content = `<div id="hm-content" style="flex:1;overflow-y:auto;padding:0 20px 20px;${saving ? 'opacity:0.6;pointer-events:none' : ''}">`;
     if (saving) {
         content += `<div style="padding:8px 0;font-size:0.68rem;color:${c.accent};display:flex;align-items:center;gap:6px">
